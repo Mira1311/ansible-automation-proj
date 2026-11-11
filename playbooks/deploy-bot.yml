@@ -1,0 +1,20 @@
+---
+  - name: Deploy FinOps Bot from AWS ECR
+    hosts: all
+    become: yes
+    tasks:
+      - name: Setup AWS CLI to authenticate ECR
+        apt:
+          name: awscli
+          state: present
+          update_cache: yes
+      
+      - name: Login to AWS ECR
+        shell: aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 335937357465.dkr.ecr.ap-southeast-1.amazonaws.com
+
+      - name: Clean old container ( if it still running )
+        shell: docker rm -f finops-bot
+        ignore_errors: yes
+
+      - name: Pull image and initiate FinOps Bot
+        shell: docker run -d --name finops-bot 335937357465.dkr.ecr.ap-southeast-1.amazonaws.com/finops-bot:latest -a scan-inventory -r ap-southeast-1
